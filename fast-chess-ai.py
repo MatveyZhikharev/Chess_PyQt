@@ -444,7 +444,7 @@ class Bishop:
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(self, board, row, col, row1, col1)
 
-
+#comment
 class Chess(QMainWindow):
     def __init__(self):
         super(Chess, self).__init__()
