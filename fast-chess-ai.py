@@ -1,9 +1,10 @@
 import sys
 
 from PIL import Image
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from stockfish import Stockfish
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
 
 WHITE = 1
 BLACK = 2
@@ -74,7 +75,7 @@ def print_board(board):  # Распечатать доску в текстово
 
 
 def print_image(board):
-    im = Image.open("images/desk.png")
+    im = Image.open("images/desk0.png")
     for row in range(8):
         for col in range(8):
             im2 = IMAGES.get(board.cell(row, col), False)
@@ -444,12 +445,15 @@ class Bishop:
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(self, board, row, col, row1, col1)
 
-#comment
+
 class Chess(QMainWindow):
     def __init__(self):
         super(Chess, self).__init__()
         self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
         uic.loadUi("design.ui", self)
+        self.pixmap = QPixmap("images/desk.png")
+        self.pixmap.scaled(10, 80, QtCore.Qt.KeepAspectRatio)
+        self.desk.setPixmap(self.pixmap)
         self.board = Board()
 
     def game(self):
@@ -489,6 +493,13 @@ class Chess(QMainWindow):
                 row, col, row1, col1 = 8 - int(move[1]), MOVES[move[0]], 8 - int(move[3]), MOVES[move[2]]
                 print(row, col, row1, col1)
                 self.board.move_piece(row, col, row1, col1)
+
+    def place_figures(self):
+        for i in range(len(self.board.field)):
+            for j in range(len(self.board.field[i])):
+                figure = self.board.field[i][j]
+                if figure is not None:
+                    cur_image = IMAGES[self.board.cell(i, j)]
 
 
 if __name__ == "__main__":
