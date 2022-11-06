@@ -501,7 +501,7 @@ class Chess(QMainWindow):
                 if figure is not None:
                     cur_image = IMAGES[self.board.cell(i, j)]
 
-
+#trrt
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     chess = Chess()
