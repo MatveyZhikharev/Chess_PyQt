@@ -4,7 +4,7 @@ from PIL import Image
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from stockfish import Stockfish
-from PyQt5 import uic, QtCore
+from PyQt5 import uic
 
 WHITE = 1
 BLACK = 2
@@ -75,7 +75,7 @@ def print_board(board):  # Распечатать доску в текстово
 
 
 def print_image(board):
-    im = Image.open("images/desk0.png")
+    im = Image.open("images/desk.png")
     for row in range(8):
         for col in range(8):
             im2 = IMAGES.get(board.cell(row, col), False)
@@ -85,6 +85,9 @@ def print_image(board):
                 im2.thumbnail((x // 5 * 3, y // 5 * 3))
                 im.paste(im2, (170 + col * 192, row * 190 - 50), mask=im2)
     im.save("images/res.png")
+
+
+def
 
 
 class Board:
@@ -452,22 +455,11 @@ class Chess(QMainWindow):
         self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
         uic.loadUi("design.ui", self)
         self.pixmap = QPixmap("images/desk.png")
-        self.pixmap.scaled(10, 80, QtCore.Qt.KeepAspectRatio)
         self.desk.setPixmap(self.pixmap)
         self.board = Board()
 
     def game(self):
-        # Цикл ввода команд игроков
         while True:
-            # Выводим положение фигур на доске
-            # Подсказка по командам
-            print('Команды:')
-            print('    exit                               -- выход')
-            print('    move <row> <col> <row1> <col1>     -- ход из клетки (row, col)')
-            print('                                          в клетку (row1, col1)')
-            print('    castling0                          -- рокировка с ладьей 1')
-            print('    castling7                          -- рокировка с ладьей 8')
-            # Выводим приглашение игроку нужного цвета
             if self.board.current_player_color() == WHITE:
                 print('Ваш ход:')
                 command = input()
@@ -499,7 +491,7 @@ class Chess(QMainWindow):
             for j in range(len(self.board.field[i])):
                 figure = self.board.field[i][j]
                 if figure is not None:
-                    cur_image = IMAGES[self.board.cell(i, j)]
+                    pixmap = IMAGES[self.board.cell(i, j)]
 
 
 if __name__ == "__main__":
