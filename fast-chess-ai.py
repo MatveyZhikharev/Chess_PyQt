@@ -2,7 +2,7 @@ import sys
 
 from PIL import Image
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from stockfish import Stockfish
 from PyQt5 import uic
 
@@ -87,7 +87,8 @@ def print_image(board):
     im.save("images/res.png")
 
 
-def
+def return_cell(x, y):
+    return x - 20
 
 
 class Board:
@@ -454,9 +455,14 @@ class Chess(QMainWindow):
         super(Chess, self).__init__()
         self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
         uic.loadUi("design.ui", self)
+        self.lab = QLabel(self)
+        self.lab.move(10, 33)
+        self.lab.resize(150, 25)
+        self.setMouseTracking(True)
         self.pixmap = QPixmap("images/desk.png")
-        self.desk.setPixmap(self.pixmap)
+        self.desk.setPixmap(self.pixmap)#88 121     175 204     87 83    85
         self.board = Board()
+        self.place_figures()
 
     def game(self):
         while True:
@@ -491,7 +497,11 @@ class Chess(QMainWindow):
             for j in range(len(self.board.field[i])):
                 figure = self.board.field[i][j]
                 if figure is not None:
-                    pixmap = IMAGES[self.board.cell(i, j)]
+                    pixmap = QPixmap(IMAGES[self.board.cell(i, j)])
+                    label = QLabel(self)
+                    label.resize(116, 268)
+                    label.setPixmap(pixmap)
+                    label.move(90 + 86 * j, 85 * i)
 
 
 if __name__ == "__main__":
