@@ -42,7 +42,6 @@ IMAGES = {"♜": "images/BlackRook.png",
           "♕": "images/WhiteKing.png",
           "♔": "images/WhiteQueen.png",
           "♙": "images/WhitePawn.png"}
-last_mes = ""
 
 
 # Удобная функция для вычисления цвета противника
@@ -88,7 +87,13 @@ def print_image(board):
 
 
 def return_cell(x, y):
-    return x - 20
+    letters = "abcdefgh"
+    nums = "12345678"
+    print((x - 90) // 86, (y - 120) // 85)
+    x, y = (x - 90) // 86, (y - 120) // 85
+    if 0 <= x <= 7 and 0 <= y <= 7:
+        return letters[x], nums[y]
+    return letters[0], nums[0]
 
 
 class Board:
@@ -460,8 +465,9 @@ class Chess(QMainWindow):
         self.lab.resize(150, 25)
         self.setMouseTracking(True)
         self.pixmap = QPixmap("images/desk.png")
-        self.desk.setPixmap(self.pixmap)#88 121     175 204     87 83    85
+        self.desk.setPixmap(self.pixmap)  # 88 121     175 204     87 83    85
         self.board = Board()
+        self.field = []
         self.place_figures()
 
     def game(self):
@@ -494,6 +500,7 @@ class Chess(QMainWindow):
 
     def place_figures(self):
         for i in range(len(self.board.field)):
+            row = []
             for j in range(len(self.board.field[i])):
                 figure = self.board.field[i][j]
                 if figure is not None:
@@ -502,6 +509,18 @@ class Chess(QMainWindow):
                     label.resize(116, 268)
                     label.setPixmap(pixmap)
                     label.move(90 + 86 * j, 85 * i)
+                    row.append(label)
+            if row:
+                self.field.append(row)
+            else:
+                self.field.append([None] * 8)
+
+    def mouseMoveEvent(self, event):
+        letter, num = return_cell(event.x(), event.y())
+        print(self.field)
+        figure = self.field[MOVES[letter]][int(num) - 1]
+        if figure:
+            figure.move(event.x(), event.y())
 
 
 if __name__ == "__main__":
