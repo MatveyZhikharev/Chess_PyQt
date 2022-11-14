@@ -88,7 +88,7 @@ def print_image(board):
 
 def return_cell(x, y):
     letters = "abcdefgh"
-    nums = "87654321"[::-1]
+    nums = "12345678"
     print((x - 90) // 86, (y - 120) // 85)
     x, y = (x - 90) // 86, (y - 120) // 85
     if 0 <= x <= 7 and 0 <= y <= 7:
