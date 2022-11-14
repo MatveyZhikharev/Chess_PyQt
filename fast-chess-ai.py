@@ -88,7 +88,7 @@ def print_image(board):
 
 def return_cell(x, y):
     letters = "abcdefgh"
-    nums = "12345678"
+    nums = "87654321"[::-1]
     print((x - 90) // 86, (y - 120) // 85)
     x, y = (x - 90) // 86, (y - 120) // 85
     if 0 <= x <= 7 and 0 <= y <= 7:
@@ -510,17 +510,16 @@ class Chess(QMainWindow):
                     label.setPixmap(pixmap)
                     label.move(90 + 86 * j, 85 * i)
                     row.append(label)
-            if row:
-                self.field.append(row)
-            else:
-                self.field.append([None] * 8)
+                else:
+                    row.append(None)
+            self.field.append(row)
 
     def mouseMoveEvent(self, event):
         letter, num = return_cell(event.x(), event.y())
-        print(self.field)
-        figure = self.field[MOVES[letter]][int(num) - 1]
+        print(letter, int(num))
+        figure = self.field[int(num) - 1][MOVES[letter]]
         if figure:
-            figure.move(event.x(), event.y())
+            figure.move(event.x(), event.y() - 150)
 
 
 if __name__ == "__main__":
