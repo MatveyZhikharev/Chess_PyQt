@@ -460,6 +460,7 @@ class Chess(QMainWindow):
         super(Chess, self).__init__()
         self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
         uic.loadUi("design.ui", self)
+        self.figure_chosed = 0
         self.lab = QLabel(self)
         self.lab.move(10, 33)
         self.lab.resize(150, 25)
@@ -520,6 +521,13 @@ class Chess(QMainWindow):
         figure = self.field[int(num) - 1][MOVES[letter]]
         if figure:
             figure.move(event.x(), event.y() - 150)
+        print(self.field)
+        if not self.figure_chosed:
+            self.figure_chosed = 1
+            figure = self.field[MOVES[letter]][int(num) - 1]
+        if self.figure_chosed:
+            if figure is not None:
+                figure.move(event.x(), event.y())
 
 
 if __name__ == "__main__":
