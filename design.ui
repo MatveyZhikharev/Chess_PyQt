@@ -22,9 +22,9 @@
    <widget class="QPushButton" name="new_game">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>910</x>
       <y>60</y>
-      <width>241</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
@@ -40,9 +40,9 @@
    <widget class="QPushButton" name="save">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>910</x>
       <y>220</y>
-      <width>241</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
@@ -58,9 +58,9 @@
    <widget class="QPushButton" name="take_hint">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>910</x>
       <y>140</y>
-      <width>241</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
@@ -84,6 +84,35 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="steps">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>380</y>
+      <width>261</width>
+      <height>351</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="condition">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>300</y>
+      <width>261</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="text">
+     <string>Всё хорошо</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
   </widget>

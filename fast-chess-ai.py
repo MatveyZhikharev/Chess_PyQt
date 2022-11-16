@@ -89,11 +89,17 @@ def print_image(board):
 def return_cell(x, y):
     letters = "abcdefgh"
     nums = "12345678"
-    print((x - 90) // 86, (y - 120) // 85)
     x, y = (x - 90) // 86, (y - 120) // 85
     if 0 <= x <= 7 and 0 <= y <= 7:
         return letters[x], nums[y]
     return letters[0], nums[0]
+
+
+def return_cell_num(x, y):
+    x, y = (x - 90) // 86, (y - 120) // 85
+    if 0 <= x <= 7 and 0 <= y <= 7:
+        return x, y
+    return 0, 0
 
 
 class Board:
@@ -461,15 +467,18 @@ class Chess(QMainWindow):
         self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
         uic.loadUi("design.ui", self)
         self.figure_chosed = 0
+        self.figure = 0
         self.lab = QLabel(self)
         self.lab.move(10, 33)
         self.lab.resize(150, 25)
-        self.setMouseTracking(True)
         self.pixmap = QPixmap("images/desk.png")
         self.desk.setPixmap(self.pixmap)  # 88 121     175 204     87 83    85
         self.board = Board()
         self.field = []
         self.place_figures()
+        self.new_game: QLabel.setStyleSheet("background-color: white")
+        # self.setMouseTracking(True)
+        # self.centralWidget().setMouseTracking(True)
 
     def game(self):
         while True:
@@ -516,18 +525,21 @@ class Chess(QMainWindow):
             self.field.append(row)
 
     def mouseMoveEvent(self, event):
-        letter, num = return_cell(event.x(), event.y())
+        print(124)
+        letter, num = return_cell_num(event.x(), event.y())
         print(letter, int(num))
-        figure = self.field[int(num) - 1][MOVES[letter]]
-        if figure:
-            figure.move(event.x(), event.y() - 150)
-        print(self.field)
         if not self.figure_chosed:
-            self.figure_chosed = 1
-            figure = self.field[MOVES[letter]][int(num) - 1]
+            self.figure_chosed = (letter, num)
+            self.figure = self.field[num][letter]
+        if self.figure:
+            self.figure.move(86 * (event.x() // 86) + 90, event.y() - 150)
         if self.figure_chosed:
-            if figure is not None:
-                figure.move(event.x(), event.y())
+            if self.figure is not None:
+                self.figure.move(event.x(), event.y())
+                print(*self.figure_chosed, *return_cell_num(event.x(), event.y()))
+                if self.board.move_piece(*self.figure_chosed[::-1], *return_cell_num(event.x(), event.y())[::-1]):
+                    self.condition.setText("Ход успешен")
+                print_board(self.board)
 
 
 if __name__ == "__main__":
