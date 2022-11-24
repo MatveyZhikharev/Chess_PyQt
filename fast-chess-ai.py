@@ -4,7 +4,8 @@ from PIL import Image
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from stockfish import Stockfish
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
+import csv
 
 WHITE = 1
 BLACK = 2
@@ -43,6 +44,7 @@ IMAGES = {"♜": "images/BlackRook.png",
           "♔": "images/WhiteQueen.png",
           "♙": "images/WhitePawn.png"}
 
+NUMTOLET = "ABCDEFGH"
 
 # Удобная функция для вычисления цвета противника
 def opponent(color):
@@ -99,7 +101,7 @@ def return_cell_num(x, y):
     x, y = (x - 90) // 86, (y - 120) // 85
     if 0 <= x <= 7 and 0 <= y <= 7:
         return x, y
-    return 0, 0
+    return None
 
 
 class Board:
@@ -204,12 +206,15 @@ class Board:
             return False  # нельзя пойти в ту же клетку
         piece = self.field[row][col]
         # print(piece.get_color(), self.color)
+        print(piece.get_color())
         if piece is None:
             return False
         if piece.get_color() != self.color:
             return False
         if self.field[row1][col1] is None:
             if not piece.can_move(self, row, col, row1, col1):
+                if piece.get_color() == BLACK:
+                    return self.castling_0() if col == 3 else self.castling_7
                 return False
         elif self.field[row1][col1].get_color() == opponent(piece.get_color()):
             if not piece.can_attack(self, row, col, row1, col1):
@@ -334,7 +339,7 @@ class Pawn:
         return False
 
     def can_attack(self, board, row, col, row1, col1):
-        direction = 1 if (self.color == WHITE) else -1
+        direction = -1 if (self.color == WHITE) else 1
         return (row + direction == row1
                 and (col + 1 == col1 or col - 1 == col1))
 
@@ -350,11 +355,12 @@ class Knight:
         return 'N'  # kNight, буква 'K' уже занята королём
 
     def can_move(self, board, row, col, row1, col1):
-        return (row - 2 == row1 and col - 1 == row1) or (row + 2 == row1 and col + 1 == row1) or \
-               (row - 1 == row1 and col - 2 == row1) or (row + 1 == row1 and col + 2 == row1)
+        delta_row = abs(row1 - row)
+        delta_col = abs(col1 - col)
+        return max(delta_col, delta_row) == 2 and min(delta_col, delta_row) == 1
 
     def can_attack(self, board, row, col, row1, col1):
-        return self.can_move(self, board, row, col, row1, col1)
+        return self.can_move(board, row, col, row1, col1)
 
 
 class King:
@@ -395,7 +401,7 @@ class King:
         return False
 
     def can_attack(self, board, row, col, row1, col1):
-        return self.can_move(self, board, row, col, row1, col1)
+        return self.can_move(board, row, col, row1, col1)
 
 
 class Queen:
@@ -441,7 +447,8 @@ class Queen:
         return False
 
     def can_attack(self, board, row, col, row1, col1):
-        return self.can_move(self, board, row, col, row1, col1)
+        print(self.can_move(board, row, col, row1, col1))
+        return self.can_move(board, row, col, row1, col1)
 
 
 class Bishop:
@@ -458,13 +465,13 @@ class Bishop:
         return abs(row - row1) == abs(col - col1)
 
     def can_attack(self, board, row, col, row1, col1):
-        return self.can_move(self, board, row, col, row1, col1)
+        return self.can_move(board, row, col, row1, col1)
 
 
 class Chess(QMainWindow):
     def __init__(self):
         super(Chess, self).__init__()
-        self.stockfish = Stockfish(path="stockfish1\stockfish1.exe")
+        self.stockfish = Stockfish(path="stockfish_15_win_x64_avx2\stockfish_15_x64_avx2.exe")
         uic.loadUi("design.ui", self)
         self.figure_chosed = 0
         self.figure = 0
@@ -476,9 +483,16 @@ class Chess(QMainWindow):
         self.board = Board()
         self.field = []
         self.place_figures()
-        self.new_game: QLabel.setStyleSheet("background-color: white")
-        # self.setMouseTracking(True)
-        # self.centralWidget().setMouseTracking(True)
+        self.steps = []
+        for elem in (self.new_game, self.take_hint, self.save):
+            elem.setStyleSheet("""background-color: 'white';
+                                    border-radius: 15px; 
+                                    outline: 2px solid #CCC;
+                                    """)
+        with open("steps.csv", "w", encoding="utf8") as csv_file:
+            writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(["Игрок", "Ход"])
+
 
     def game(self):
         while True:
@@ -508,7 +522,26 @@ class Chess(QMainWindow):
                 print(row, col, row1, col1)
                 self.board.move_piece(row, col, row1, col1)
 
+    def steps_checker(self, step):
+        with open("steps.csv", encoding="utf8") as csv_file:
+            reader = csv.reader(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        with open("steps.csv", "w", encoding="utf8") as csv_file:
+            writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerows(reader)
+
+    def delete_figures(self):
+        if not self.field:
+            return
+        for i in range(len(self.board.field)):
+            for j in range(len(self.board.field[i])):
+                figure = self.field[i][j]
+                if figure:
+                    figure.hide()
+
     def place_figures(self):
+        self.delete_figures()
+        self.field = []
+        print_board(self.board)
         for i in range(len(self.board.field)):
             row = []
             for j in range(len(self.board.field[i])):
@@ -524,22 +557,75 @@ class Chess(QMainWindow):
                     row.append(None)
             self.field.append(row)
 
+    def replace_figures(self):
+        print_board(self.board)
+        for i in range(len(self.board.field)):
+            for j in range(len(self.board.field[i])):
+                figure = self.board.field[i][j]
+                if figure is not None:
+                    label = self.field[i][j]
+                    if not label:
+                        pixmap = QPixmap(IMAGES[self.board.cell(i, j)])
+                        label = QLabel(self)
+                        label.resize(116, 268)
+                        label.setPixmap(pixmap)
+                        self.field[i][j] = label
+                        label = self.field[i][j]
+                    label.move(90 + 86 * j, 85 * i)
+                    label.raise_()
+                elif self.field[i][j] is not None:
+                    self.field[i][j].hide()
+                    self.field[i][j] = None
+
+    def move_piece(self, row, col, row1, col1):
+        figure = self.field[row][col]
+        self.steps.append("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower())
+        self.stockfish.set_position([*self.steps])
+        self.field[row][col] = None
+        if self.field[row1][col1]:
+            self.field[row1][col1].hide()
+
+        self.field[row1][col1] = figure
+
+        self.steps.append(move := self.stockfish.get_best_move())
+        self.stockfish.set_position([*self.steps])
+        print(self.stockfish.get_board_visual())
+
+        col, row, col1, row1 = list(move)
+        row, col, row1, col1 = int(row) - 1, MOVES[col], int(row1) - 1, MOVES[col1]
+        print(move)
+        figure = self.field[7 - row][col]
+        if self.field[7 - row1][col1]:
+            self.field[7 - row1][col1].hide()
+        self.field[7 - row1][col1] = figure
+        self.field[7 - row][col] = None
+        print(self.board.move_piece(7 - row, col, 7 - row1, col1))
+
+    def mouseReleaseEvent(self, event):
+        try:
+            if self.board.move_piece(*self.figure_chosed[::-1], *self.coords):
+                self.move_piece(*self.figure_chosed[::-1], *self.coords)
+                self.condition.setText("Ход успешен")
+            self.replace_figures()
+            self.figure_chosed, self.figure = None, None
+        except Exception as e:
+            print(e)
+            self.replace_figures()
+            self.figure_chosed, self.figure = None, None
+
     def mouseMoveEvent(self, event):
-        print(124)
-        letter, num = return_cell_num(event.x(), event.y())
-        print(letter, int(num))
-        if not self.figure_chosed:
-            self.figure_chosed = (letter, num)
-            self.figure = self.field[num][letter]
-        if self.figure:
-            self.figure.move(86 * (event.x() // 86) + 90, event.y() - 150)
-        if self.figure_chosed:
-            if self.figure is not None:
+        if return_cell_num(event.x(), event.y()):
+            letter, num = return_cell_num(event.x(), event.y())
+            #print(letter, int(num))
+            if not self.figure_chosed:
+                self.figure_chosed = (letter, num)
+                self.figure = self.field[num][letter]
+            if self.figure:
+                self.figure.move(86 * (event.x() // 86) + 90, event.y() - 150)
+            if self.figure_chosed and self.figure is not None:
                 self.figure.move(event.x(), event.y())
-                print(*self.figure_chosed, *return_cell_num(event.x(), event.y()))
-                if self.board.move_piece(*self.figure_chosed[::-1], *return_cell_num(event.x(), event.y())[::-1]):
-                    self.condition.setText("Ход успешен")
-                print_board(self.board)
+                self.coords = return_cell_num(event.x(), event.y())[::-1]
+                #print(*self.figure_chosed, *return_cell_num(event.x(), event.y()))
 
 
 if __name__ == "__main__":

@@ -86,16 +86,6 @@
      <string/>
     </property>
    </widget>
-   <widget class="QListWidget" name="steps">
-    <property name="geometry">
-     <rect>
-      <x>910</x>
-      <y>380</y>
-      <width>261</width>
-      <height>351</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="condition">
     <property name="geometry">
      <rect>
@@ -109,10 +99,20 @@
      <enum>Qt::LeftToRight</enum>
     </property>
     <property name="text">
-     <string>Всё хорошо</string>
+     <string>Ваш ход</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="steps">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>380</y>
+      <width>261</width>
+      <height>411</height>
+     </rect>
     </property>
    </widget>
   </widget>
@@ -176,6 +176,11 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>new_game</tabstop>
+  <tabstop>take_hint</tabstop>
+  <tabstop>save</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
