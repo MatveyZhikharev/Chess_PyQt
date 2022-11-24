@@ -2,10 +2,12 @@ import sys
 
 from PIL import Image
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTableWidget, QHeaderView, QTableWidgetItem
 from stockfish import Stockfish
-from PyQt5 import uic, QtCore
+from PyQt5 import uic
 import csv
+
+NAME = "Вы"
 
 WHITE = 1
 BLACK = 2
@@ -491,7 +493,12 @@ class Chess(QMainWindow):
                                     """)
         with open("steps.csv", "w", encoding="utf8") as csv_file:
             writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(["Игрок", "Ход"])
+            writer.writerow(title := ["Игрок", "Откуда", "Куда"])
+            self.steps_table.setColumnCount(len(title))
+            self.steps_table.setHorizontalHeaderLabels(title)
+            self.steps_table.setRowCount(0)
+            self.steps_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+            self.steps_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
 
 
     def game(self):
@@ -522,12 +529,23 @@ class Chess(QMainWindow):
                 print(row, col, row1, col1)
                 self.board.move_piece(row, col, row1, col1)
 
-    def steps_checker(self, step):
+    def steps_checker(self, step, ai):
         with open("steps.csv", encoding="utf8") as csv_file:
             reader = csv.reader(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        with open("steps.csv", "w", encoding="utf8") as csv_file:
-            writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerows(reader)
+            rows = list(reader)
+            with open("steps.csv", "w", encoding="utf8") as csv_file:
+                writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                rows.append([("Компьютер" if ai else NAME), step[:2], step[2:]])
+                rows = [row for row in rows if row]
+                for i, row in enumerate(rows[1:]):
+                    self.steps_table.setRowCount(
+                        len(rows[1:]) + 1)
+                    for j, elem in enumerate(row):
+                        self.steps_table.setItem(
+                            i, j, QTableWidgetItem(elem))
+                self.steps_table.resizeColumnToContents(0)
+                print(rows)
+                writer.writerows(rows)
 
     def delete_figures(self):
         if not self.field:
@@ -580,6 +598,7 @@ class Chess(QMainWindow):
     def move_piece(self, row, col, row1, col1):
         figure = self.field[row][col]
         self.steps.append("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower())
+        self.steps_checker("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower(), 0)
         self.stockfish.set_position([*self.steps])
         self.field[row][col] = None
         if self.field[row1][col1]:
@@ -593,7 +612,7 @@ class Chess(QMainWindow):
 
         col, row, col1, row1 = list(move)
         row, col, row1, col1 = int(row) - 1, MOVES[col], int(row1) - 1, MOVES[col1]
-        print(move)
+        self.steps_checker(move, 1)
         figure = self.field[7 - row][col]
         if self.field[7 - row1][col1]:
             self.field[7 - row1][col1].hide()

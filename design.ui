@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1197</width>
+    <width>1217</width>
     <height>911</height>
    </rect>
   </property>
@@ -22,9 +22,9 @@
    <widget class="QPushButton" name="new_game">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>890</x>
       <y>60</y>
-      <width>261</width>
+      <width>300</width>
       <height>61</height>
      </rect>
     </property>
@@ -40,9 +40,9 @@
    <widget class="QPushButton" name="save">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>890</x>
       <y>220</y>
-      <width>261</width>
+      <width>300</width>
       <height>61</height>
      </rect>
     </property>
@@ -58,9 +58,9 @@
    <widget class="QPushButton" name="take_hint">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>890</x>
       <y>140</y>
-      <width>261</width>
+      <width>300</width>
       <height>61</height>
      </rect>
     </property>
@@ -89,9 +89,9 @@
    <widget class="QLabel" name="condition">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>890</x>
       <y>300</y>
-      <width>261</width>
+      <width>300</width>
       <height>61</height>
      </rect>
     </property>
@@ -105,12 +105,12 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QTableWidget" name="steps">
+   <widget class="QTableWidget" name="steps_table">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>890</x>
       <y>380</y>
-      <width>261</width>
+      <width>300</width>
       <height>411</height>
      </rect>
     </property>
@@ -121,7 +121,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1197</width>
+     <width>1217</width>
      <height>26</height>
     </rect>
    </property>
