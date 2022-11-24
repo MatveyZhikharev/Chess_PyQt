@@ -19,7 +19,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="new_game">
+   <widget class="QPushButton" name="level">
     <property name="geometry">
      <rect>
       <x>890</x>
@@ -34,14 +34,14 @@
      </font>
     </property>
     <property name="text">
-     <string>Новая игра</string>
+     <string>Изменить уровень</string>
     </property>
    </widget>
    <widget class="QPushButton" name="save">
     <property name="geometry">
      <rect>
       <x>890</x>
-      <y>220</y>
+      <y>730</y>
       <width>300</width>
       <height>61</height>
      </rect>
@@ -52,7 +52,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Сохраниться</string>
+     <string>Сохранить файл с ходами</string>
     </property>
    </widget>
    <widget class="QPushButton" name="take_hint">
@@ -90,7 +90,7 @@
     <property name="geometry">
      <rect>
       <x>890</x>
-      <y>300</y>
+      <y>220</y>
       <width>300</width>
       <height>61</height>
      </rect>
@@ -109,7 +109,7 @@
     <property name="geometry">
      <rect>
       <x>890</x>
-      <y>380</y>
+      <y>300</y>
       <width>300</width>
       <height>411</height>
      </rect>
@@ -129,38 +129,32 @@
     <property name="title">
      <string>Настройки</string>
     </property>
-    <addaction name="action_3"/>
-    <addaction name="action_4"/>
-    <addaction name="action_5"/>
+    <addaction name="chose_level"/>
+    <addaction name="direct"/>
+    <addaction name="correct_name"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>Поделиться</string>
     </property>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
-   </widget>
-   <widget class="QMenu" name="previous_games">
-    <property name="title">
-     <string>Предыдущие игры</string>
-    </property>
+    <addaction name="save_file_1"/>
+    <addaction name="save_photo"/>
    </widget>
    <addaction name="settings"/>
-   <addaction name="previous_games"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action">
+  <action name="save_file_1">
    <property name="text">
     <string>Файлом</string>
    </property>
   </action>
-  <action name="action_2">
+  <action name="save_photo">
    <property name="text">
     <string>Фото</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="chose_level">
    <property name="text">
     <string>Изменить уровень</string>
    </property>
@@ -170,14 +164,19 @@
     <string>Изменить цвет</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="direct">
    <property name="text">
     <string>Изменить папку сохранения</string>
    </property>
   </action>
+  <action name="correct_name">
+   <property name="text">
+    <string>Изменить имя</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
-  <tabstop>new_game</tabstop>
+  <tabstop>level</tabstop>
   <tabstop>take_hint</tabstop>
   <tabstop>save</tabstop>
  </tabstops>

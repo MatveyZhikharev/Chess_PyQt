@@ -2,12 +2,13 @@ import sys
 
 from PIL import Image
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTableWidget, QHeaderView, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QHeaderView, QTableWidgetItem, QFileDialog, QInputDialog
 from stockfish import Stockfish
 from PyQt5 import uic
 import csv
 
 NAME = "Вы"
+DIRECTORY = ""
 
 WHITE = 1
 BLACK = 2
@@ -48,6 +49,7 @@ IMAGES = {"♜": "images/BlackRook.png",
 
 NUMTOLET = "ABCDEFGH"
 
+
 # Удобная функция для вычисления цвета противника
 def opponent(color):
     if color == WHITE:
@@ -55,13 +57,11 @@ def opponent(color):
     return WHITE
 
 
-def correct_coords(row, col):
-    """Функция проверяет, что координаты (row, col) лежат
-    внутри доски"""
+def correct_coords(row, col):  # Функция проверяет, что координаты (row, col) лежат внутри доски
     return 0 <= row < 8 and 0 <= col < 8
 
 
-def print_board(board):  # Распечатать доску в текстовом виде (см. скриншот)
+def print_board(board):  # Распечатать доску в текстовом виде (для отладки)
     print('     +––––+–––––+––––+–––––+––––+–––––+––––+–––––+')
     for row in range(8):
         print(' ', row, end='  ')
@@ -77,7 +77,7 @@ def print_board(board):  # Распечатать доску в текстово
     print()
 
 
-def print_image(board):
+def save_image(board, track):
     im = Image.open("images/desk.png")
     for row in range(8):
         for col in range(8):
@@ -85,9 +85,9 @@ def print_image(board):
             if im2:
                 im2 = Image.open(im2)
                 x, y = im2.size
-                im2.thumbnail((x // 5 * 3, y // 5 * 3))
-                im.paste(im2, (170 + col * 192, row * 190 - 50), mask=im2)
-    im.save("images/res.png")
+                im2.thumbnail((x, y))
+                im.paste(im2, (71 + 86 * col, 85 * row - 50), mask=im2)
+    im.save(track)
 
 
 def return_cell(x, y):
@@ -201,7 +201,6 @@ class Board:
         '''Переместить фигуру из точки (row, col) в точку (row1, col1).
         Если перемещение возможно, метод выполнит его и вернёт True.
         Если нет --- вернёт False'''
-
         if not correct_coords(row, col) or not correct_coords(row1, col1):
             return False
         if row == row1 and col == col1:
@@ -210,6 +209,8 @@ class Board:
         # print(piece.get_color(), self.color)
         print(piece.get_color())
         if piece is None:
+            return False
+        if self.king_is_under_attack(WHITE, row, col, row1, col1) and piece.get_color() == WHITE:
             return False
         if piece.get_color() != self.color:
             return False
@@ -256,18 +257,30 @@ class Board:
             return True
         return False
 
+    def king_is_under_attack(self, color, row, col, row1, col1):
+        for r in range(8):
+            for c in range(8):
+                if type(self.field[r][c]) == King:
+                    piece = self.field[row2 := r][col2 := c]
+                    if type(self.field[row][col]) == King:
+                        if self.is_under_attack(row1, col1, opponent(color)):
+                            return True
+                        return False
+                    if self.is_under_attack(row2, col2, opponent(piece.get_color())):
+                        return piece.get_color() == color
+
     def is_under_attack(self, row, col, color):
         for r in range(8):
             for c in range(8):
                 piece = self.field[r][c]
                 if piece is None:
                     continue
-                if piece.get_color() == color and piece.can_move(row, col):
+                if piece.get_color() == color and piece.can_move(self, r, c, row, col):
                     return True
         return False
 
 
-class Rook:
+class Rook:  # класс фигуры - ладья
     def __init__(self, color):
         self.color = color
 
@@ -304,7 +317,7 @@ class Rook:
         return self.can_move(board, row, col, row1, col1)
 
 
-class Pawn:
+class Pawn:  # класс фигуры - пешка#
     def __init__(self, color):
         self.color = color
 
@@ -346,7 +359,7 @@ class Pawn:
                 and (col + 1 == col1 or col - 1 == col1))
 
 
-class Knight:
+class Knight:  # класс фигуры - конь
     def __init__(self, color):
         self.color = color
 
@@ -365,7 +378,7 @@ class Knight:
         return self.can_move(board, row, col, row1, col1)
 
 
-class King:
+class King:  # класс фигуры - Король
     def __init__(self, color):
         self.color = color
 
@@ -400,13 +413,15 @@ class King:
             board.castling_0.add(self.color)
             board.castling_7.add(self.color)
             return True
+        if correct_coords(row1, col1):
+            return True
         return False
 
     def can_attack(self, board, row, col, row1, col1):
         return self.can_move(board, row, col, row1, col1)
 
 
-class Queen:
+class Queen:  # класс фигуры - Ферзь
     def __init__(self, color):
         self.color = color
 
@@ -453,7 +468,7 @@ class Queen:
         return self.can_move(board, row, col, row1, col1)
 
 
-class Bishop:
+class Bishop:  # класс фигуры - слон
     def __init__(self, color):
         self.color = color
 
@@ -470,10 +485,10 @@ class Bishop:
         return self.can_move(board, row, col, row1, col1)
 
 
-class Chess(QMainWindow):
+class Chess(QMainWindow):  # класс интерсфейса игры
     def __init__(self):
         super(Chess, self).__init__()
-        self.stockfish = Stockfish(path="stockfish_15_win_x64_avx2\stockfish_15_x64_avx2.exe")
+        self.stockfish = Stockfish(path="stockfish_15_win_x64_avx2\stockfish_15_x64_avx2.exe")  # шахматный ИИ
         uic.loadUi("design.ui", self)
         self.figure_chosed = 0
         self.figure = 0
@@ -481,17 +496,17 @@ class Chess(QMainWindow):
         self.lab.move(10, 33)
         self.lab.resize(150, 25)
         self.pixmap = QPixmap("images/desk.png")
-        self.desk.setPixmap(self.pixmap)  # 88 121     175 204     87 83    85
+        self.desk.setPixmap(self.pixmap)
         self.board = Board()
         self.field = []
         self.place_figures()
         self.steps = []
-        for elem in (self.new_game, self.take_hint, self.save):
+        for elem in (self.level, self.take_hint, self.save):  # стили CSS к кнопкам
             elem.setStyleSheet("""background-color: 'white';
                                     border-radius: 15px; 
                                     outline: 2px solid #CCC;
                                     """)
-        with open("steps.csv", "w", encoding="utf8") as csv_file:
+        with open("steps.csv", "w", encoding="utf8") as csv_file:  # создание файла с ходами
             writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(title := ["Игрок", "Откуда", "Куда"])
             self.steps_table.setColumnCount(len(title))
@@ -499,37 +514,64 @@ class Chess(QMainWindow):
             self.steps_table.setRowCount(0)
             self.steps_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
             self.steps_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.take_hint.clicked.connect(self.hint) # подключение всех кнопок на экране
+        self.save.clicked.connect(self.save_file)
+        self.save_file_1.triggered.connect(self.save_file)
+        self.save_photo.triggered.connect(self.save_photo_)
+        self.correct_name.triggered.connect(self.cor_name)
+        self.direct.triggered.connect(self.cor_dir)
+        self.chose_level.triggered.connect(self.cor_level)
+        self.level.clicked.connect(self.cor_level)
 
+    def cor_level(self): # выбор уровня сложности
+        try:
+            num, ok_pressed = QInputDialog.getText(self, "Введите число",
+                                                    "Введите число от 1 до 25")
+            if ok_pressed:
+                self.stockfish.set_skill_level(int(num))
+        except Exception as e:
+            print(e)
 
-    def game(self):
-        while True:
-            if self.board.current_player_color() == WHITE:
-                print('Ваш ход:')
-                command = input()
-                cast = 0
-                if command == 'exit':
-                    break
-                elif command == "castling0":
-                    cast = self.board.castling0()
-                elif command == "castling7":
-                    cast = self.board.castling7()
-                move_type, rowcol, row1col1 = command.split()
-                row, col, row1, col1 = 8 - int(rowcol[1]), MOVES[rowcol[0]], 8 - int(row1col1[1]), MOVES[row1col1[0]]
-                if self.board.move_piece(row, col, row1, col1) or cast:
-                    print([rowcol + row1col1])
-                    self.stockfish.set_position([rowcol + row1col1])
-                    print('Ход успешен')
-                else:
-                    print('Ход некорректен')
-            else:
-                move = self.stockfish.get_best_move()
-                print(move)
-                self.stockfish.set_position([move])
-                row, col, row1, col1 = 8 - int(move[1]), MOVES[move[0]], 8 - int(move[3]), MOVES[move[2]]
-                print(row, col, row1, col1)
-                self.board.move_piece(row, col, row1, col1)
+    def cor_dir(self):  # сохранение папки по умолчанию
+        global DIRECTORY
+        try:
+            fname = QFileDialog.getExistingDirectory(self, 'Выбрать папку', f'{DIRECTORY}')
+            DIRECTORY = fname[0]
+        except Exception as e:
+            print(e)
 
-    def steps_checker(self, step, ai):
+    def cor_name(self):  # изменение имени
+        global NAME
+        name, ok_pressed = QInputDialog.getText(self, "Введите имя",
+                                                "Как к вам обращаться?")
+        if ok_pressed:
+            NAME = name
+
+    def save_photo_(self):  # сохранение поля, как картинки
+        try:
+            fname = QFileDialog.getSaveFileName(self, 'Создать картинку', f'{DIRECTORY}\\res', 'Картинка (*.png);;'
+                                                                                               'Картинка (*.jpeg);;'
+                                                                                               'Картинка (*.jpg);;'
+                                                                                               'Все файлы (*)')
+            save_image(self.board, fname[0])
+        except Exception as e:
+            print(e)
+
+    def hint(self):  # подсказка
+        self.condition.setText(self.stockfish.get_best_move())
+
+    def save_file(self):  # сохранение ходов в файл
+        try:
+            fname = QFileDialog.getSaveFileName(self, 'Создать файл', f'{DIRECTORY}\\file',
+                                                'Таблица (*.csv);;Все файлы (*)')
+            with open("steps.csv", "r", encoding="utf-8") as csv_input:
+                with open(fname[0], "w", encoding="utf-8") as csv_output:
+                    for line in csv_input:
+                        csv_output.write(line)
+        except Exception as e:
+            print(e)
+
+    def steps_checker(self, step, ai):  # заполнитель поля и файла с ходами
         with open("steps.csv", encoding="utf8") as csv_file:
             reader = csv.reader(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             rows = list(reader)
@@ -544,20 +586,9 @@ class Chess(QMainWindow):
                         self.steps_table.setItem(
                             i, j, QTableWidgetItem(elem))
                 self.steps_table.resizeColumnToContents(0)
-                print(rows)
                 writer.writerows(rows)
 
-    def delete_figures(self):
-        if not self.field:
-            return
-        for i in range(len(self.board.field)):
-            for j in range(len(self.board.field[i])):
-                figure = self.field[i][j]
-                if figure:
-                    figure.hide()
-
-    def place_figures(self):
-        self.delete_figures()
+    def place_figures(self):  # помещение фигур на экран и заполнение списка фигур
         self.field = []
         print_board(self.board)
         for i in range(len(self.board.field)):
@@ -575,7 +606,7 @@ class Chess(QMainWindow):
                     row.append(None)
             self.field.append(row)
 
-    def replace_figures(self):
+    def replace_figures(self):  # удаление несуществующих фигур с жкрана, добавление перемещённых на экран
         print_board(self.board)
         for i in range(len(self.board.field)):
             for j in range(len(self.board.field[i])):
@@ -595,7 +626,7 @@ class Chess(QMainWindow):
                     self.field[i][j].hide()
                     self.field[i][j] = None
 
-    def move_piece(self, row, col, row1, col1):
+    def move_piece(self, row, col, row1, col1):  # перемещение фигур
         figure = self.field[row][col]
         self.steps.append("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower())
         self.steps_checker("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower(), 0)
@@ -603,12 +634,12 @@ class Chess(QMainWindow):
         self.field[row][col] = None
         if self.field[row1][col1]:
             self.field[row1][col1].hide()
-
         self.field[row1][col1] = figure
+        if self.board.king_is_under_attack(WHITE, row, col, row1, col1):
+            self.condition.setText("Вам шах!")
 
         self.steps.append(move := self.stockfish.get_best_move())
         self.stockfish.set_position([*self.steps])
-        print(self.stockfish.get_board_visual())
 
         col, row, col1, row1 = list(move)
         row, col, row1, col1 = int(row) - 1, MOVES[col], int(row1) - 1, MOVES[col1]
@@ -618,9 +649,11 @@ class Chess(QMainWindow):
             self.field[7 - row1][col1].hide()
         self.field[7 - row1][col1] = figure
         self.field[7 - row][col] = None
-        print(self.board.move_piece(7 - row, col, 7 - row1, col1))
+        self.board.move_piece(7 - row, col, 7 - row1, col1)
+        if self.board.king_is_under_attack(BLACK, row, col, row1, col1):
+            self.condition.setText("Шах!")
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event):  # выбор клетки, где остановился курсор
         try:
             if self.board.move_piece(*self.figure_chosed[::-1], *self.coords):
                 self.move_piece(*self.figure_chosed[::-1], *self.coords)
@@ -632,10 +665,9 @@ class Chess(QMainWindow):
             self.replace_figures()
             self.figure_chosed, self.figure = None, None
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event):  # функция handler (обработчик действий)
         if return_cell_num(event.x(), event.y()):
             letter, num = return_cell_num(event.x(), event.y())
-            #print(letter, int(num))
             if not self.figure_chosed:
                 self.figure_chosed = (letter, num)
                 self.figure = self.field[num][letter]
@@ -644,7 +676,6 @@ class Chess(QMainWindow):
             if self.figure_chosed and self.figure is not None:
                 self.figure.move(event.x(), event.y())
                 self.coords = return_cell_num(event.x(), event.y())[::-1]
-                #print(*self.figure_chosed, *return_cell_num(event.x(), event.y()))
 
 
 if __name__ == "__main__":
