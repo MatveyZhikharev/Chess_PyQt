@@ -183,9 +183,6 @@ class Board:
         self.color = opponent(self.color)
         return True
 
-    def current_player_color(self):
-        return self.color
-
     def cell(self, row, col):
         '''Возвращает строку из двух символов. Если в клетке (row, col)
         находится фигура, символы цвета и фигуры. Если клетка пуста,
@@ -206,8 +203,6 @@ class Board:
         if row == row1 and col == col1:
             return False  # нельзя пойти в ту же клетку
         piece = self.field[row][col]
-        # print(piece.get_color(), self.color)
-        print(piece.get_color())
         if piece is None:
             return False
         if self.king_is_under_attack(WHITE, row, col, row1, col1) and piece.get_color() == WHITE:
@@ -234,28 +229,6 @@ class Board:
             return self.field[row][col]
         else:
             return None
-
-    def move_and_promote_pawn(self, row, col, row1, col1, new_char):
-        if new_char not in ('Q', 'R', 'N', 'B'):
-            return False
-        piece = self.field[row][col]
-        if (piece is None) or (piece.char() != 'P'):
-            return False
-        if piece.get_color() == WHITE and row1 != 7:
-            return False
-        if piece.get_color() == BLACK and row1 != 0:
-            return False
-        if self.move_piece(row, col, row1, col1):
-            if new_char == 'Q':
-                self.field[row1][col1] = Queen(piece.get_color())
-            elif new_char == 'R':
-                self.field[row1][col1] = Rook(piece.get_color())
-            elif new_char == 'N':
-                self.field[row1][col1] = Knight(piece.get_color())
-            elif new_char == 'B':
-                self.field[row1][col1] = Bishop(piece.get_color())
-            return True
-        return False
 
     def king_is_under_attack(self, color, row, col, row1, col1):
         for r in range(8):
@@ -329,7 +302,6 @@ class Pawn:  # класс фигуры - пешка#
 
     def can_move(self, board, row, col, row1, col1):
         # Пешка может ходить только по вертикали
-        # "взятие на проходе" не реализовано
         if col != col1:
             return False
 
@@ -514,7 +486,7 @@ class Chess(QMainWindow):  # класс интерсфейса игры
             self.steps_table.setRowCount(0)
             self.steps_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
             self.steps_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        self.take_hint.clicked.connect(self.hint) # подключение всех кнопок на экране
+        self.take_hint.clicked.connect(self.hint)  # подключение всех кнопок на экране
         self.save.clicked.connect(self.save_file)
         self.save_file_1.triggered.connect(self.save_file)
         self.save_photo.triggered.connect(self.save_photo_)
@@ -523,10 +495,10 @@ class Chess(QMainWindow):  # класс интерсфейса игры
         self.chose_level.triggered.connect(self.cor_level)
         self.level.clicked.connect(self.cor_level)
 
-    def cor_level(self): # выбор уровня сложности
+    def cor_level(self):  # выбор уровня сложности
         try:
             num, ok_pressed = QInputDialog.getText(self, "Введите число",
-                                                    "Введите число от 1 до 25")
+                                                   "Введите число от 1 до 25")
             if ok_pressed:
                 self.stockfish.set_skill_level(int(num))
         except Exception as e:
