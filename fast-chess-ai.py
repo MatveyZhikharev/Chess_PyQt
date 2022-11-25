@@ -599,7 +599,7 @@ class Chess(QMainWindow):  # класс интерсфейса игры
                     self.field[i][j].hide()
                     self.field[i][j] = None
 
-    def move_piece(self, row, col, row1, col1):  # перемещение фигур
+    def move_piece(self, row, col, row1, col1):  # перемещение фигур по доске
         figure = self.field[row][col]
         self.steps.append("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower())
         self.steps_checker("".join((NUMTOLET[col], str(8 - row), NUMTOLET[col1], str(8 - row1))).lower(), 0)
