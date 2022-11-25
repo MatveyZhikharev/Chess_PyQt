@@ -77,7 +77,7 @@ def print_board(board):  # Распечатать доску в текстово
     print()
 
 
-def save_image(board, track):
+def save_image(board, track):  # сохранение доски картинкой
     im = Image.open("images/desk.png")
     for row in range(8):
         for col in range(8):
@@ -90,7 +90,7 @@ def save_image(board, track):
     im.save(track)
 
 
-def return_cell(x, y):
+def return_cell(x, y):  # функция, возвращающая номер клетки в формате (буква, цифра)
     letters = "abcdefgh"
     nums = "12345678"
     x, y = (x - 90) // 86, (y - 120) // 85
@@ -99,14 +99,14 @@ def return_cell(x, y):
     return letters[0], nums[0]
 
 
-def return_cell_num(x, y):
+def return_cell_num(x, y):  # функция, возвращающая номер клетки в формате (цифра, цифра)
     x, y = (x - 90) // 86, (y - 120) // 85
     if 0 <= x <= 7 and 0 <= y <= 7:
         return x, y
     return None
 
 
-class Board:
+class Board:  # логический класс игры
     def __init__(self):
         self.color = WHITE
         self.field = []
@@ -462,6 +462,7 @@ class Chess(QMainWindow):  # класс интерсфейса игры
         super(Chess, self).__init__()
         self.stockfish = Stockfish(path="stockfish_15_win_x64_avx2\stockfish_15_x64_avx2.exe")  # шахматный ИИ
         uic.loadUi("design.ui", self)
+        self.setWindowTitle("Шахматы PyQt с ИИ")
         self.figure_chosed = 0
         self.figure = 0
         self.lab = QLabel(self)
@@ -578,7 +579,7 @@ class Chess(QMainWindow):  # класс интерсфейса игры
                     row.append(None)
             self.field.append(row)
 
-    def replace_figures(self):  # удаление несуществующих фигур с жкрана, добавление перемещённых на экран
+    def replace_figures(self):  # удаление несуществующих фигур с экрана, добавление перемещённых на экран
         print_board(self.board)
         for i in range(len(self.board.field)):
             for j in range(len(self.board.field[i])):
