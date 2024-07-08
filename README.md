@@ -2,4 +2,4 @@
 
 pip install -r requirements.txt
 
-запустите main.py
+запустите fast-chess-ai.py
